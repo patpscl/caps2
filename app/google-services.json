@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "392208813245",
+    "firebase_url": "https://parkpal-ef1b0.firebaseio.com",
+    "project_id": "parkpal-ef1b0",
+    "storage_bucket": "parkpal-ef1b0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:392208813245:android:ebf714d5d37d0ccb",
+        "android_client_info": {
+          "package_name": "com.parkpal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "392208813245-adhd2b8t3sot1snuop3umsn7kcfg58lj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.parkpal",
+            "certificate_hash": "6a0426c971ce5389b078dab037dcc9e7b800bddb"
+          }
+        },
+        {
+          "client_id": "392208813245-n6a27g42f6oc1p6cn6c2uscv6ir36g7t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKCyeP9M8jWPEWGWPbx4B3-jpFHLYH8TM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "392208813245-n6a27g42f6oc1p6cn6c2uscv6ir36g7t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

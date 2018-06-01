@@ -32,7 +32,7 @@ public class SignInActivity extends AppCompatActivity{
             {
                 Intent intent = new Intent(SignInActivity.this,PhoneAuthActivity.class);
                 startActivity(intent);
-                finish();
+                //finish();
             }
 
         });

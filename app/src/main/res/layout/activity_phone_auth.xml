@@ -93,8 +93,6 @@ tools:context="com.parkpal.PhoneAuthActivity">
 
             />
 
-
-
         <Button
             android:id="@+id/button_start_verification"
             android:layout_width="match_parent"

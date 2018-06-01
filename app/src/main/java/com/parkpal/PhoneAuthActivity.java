@@ -277,11 +277,6 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                 public void onDataChange(DataSnapshot snapshot) {
                                     if (snapshot.getValue() != null) {
 
-                                        Intent y = new Intent(PhoneAuthActivity.this, MainActivity.class);
-                                        y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        y.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        startActivity(y);
-
                                         SharedPreferences mPreferences;
 
                                         mPreferences = getSharedPreferences("User", MODE_PRIVATE);
@@ -305,13 +300,15 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                         //    myRef.child("users").child(userID).child("Name").setValue("true");
                                         myRef.child("users").child(userID).child("contact").setValue(contactno);
 
-
-                                        Intent y = new Intent(PhoneAuthActivity.this, MainActivity.class);
+                                        Intent y = new Intent(PhoneAuthActivity.this, GetNameActivity.class);
                                         y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         y.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                         startActivity(y);
+                                        finish();
 
                                     }
+
+
                                 }
 
                                 public void onCancelled(DatabaseError arg0) {

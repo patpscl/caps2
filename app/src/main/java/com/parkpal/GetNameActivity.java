@@ -62,10 +62,13 @@ public class GetNameActivity extends AppCompatActivity {
 
     private void addName(){
         String tempName = addUserName.getText().toString().trim();
+        String s = getIntent().getStringExtra("SESSION_USER_ID");
         if(!TextUtils.isEmpty(tempName)){
+            databaseUser.child(s).child("name").setValue(tempName);
 
-
-
+            Intent intent = new Intent(GetNameActivity.this,MainActivity.class);
+            startActivity(intent);
+            finish();
 
         }else{
             Toast.makeText(this,"You should enter a name",Toast.LENGTH_LONG).show();

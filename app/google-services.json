@@ -15,12 +15,24 @@
       },
       "oauth_client": [
         {
+          "client_id": "392208813245-1fgjsa4ri3bjtiulvg7hblcutgolq4tc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.parkpal",
+            "certificate_hash": "85806125527863a825a242441cfd87d029b51e16"
+          }
+        },
+        {
           "client_id": "392208813245-adhd2b8t3sot1snuop3umsn7kcfg58lj.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.parkpal",
             "certificate_hash": "6a0426c971ce5389b078dab037dcc9e7b800bddb"
           }
+        },
+        {
+          "client_id": "392208813245-n6a27g42f6oc1p6cn6c2uscv6ir36g7t.apps.googleusercontent.com",
+          "client_type": 3
         },
         {
           "client_id": "392208813245-n6a27g42f6oc1p6cn6c2uscv6ir36g7t.apps.googleusercontent.com",

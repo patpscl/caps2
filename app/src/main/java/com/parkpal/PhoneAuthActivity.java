@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ButtonBarLayout;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -17,7 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
@@ -282,6 +280,7 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                         mPreferences = getSharedPreferences("User", MODE_PRIVATE);
                                         SharedPreferences.Editor editor = mPreferences.edit();
                                         editor.putString("saveuserid", userID);
+
                                         editor.commit();
 
                                         //user exists, do something
@@ -299,6 +298,7 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                         myRef.child("users").child(userID).setValue("true");
                                         //    myRef.child("users").child(userID).child("Name").setValue("true");
                                         myRef.child("users").child(userID).child("contact").setValue(contactno);
+                                        myRef.child("users").child(userID).child("name").setValue("-");
 
                                         Intent y = new Intent(PhoneAuthActivity.this, GetNameActivity.class);
                                         y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

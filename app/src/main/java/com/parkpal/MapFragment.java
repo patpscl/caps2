@@ -90,7 +90,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                                 getActivity().getApplicationContext(), R.raw.mapstyle));
             }
             if (!success) {
-                Log.e("MapsActivity", "Style parsing failed.");
+                Log.e("MapsActivity", "Styles parsing failed.");
             }
         } catch (Resources.NotFoundException e) {
             Log.e("MapsActivity", "Can't find style. Error: ", e);

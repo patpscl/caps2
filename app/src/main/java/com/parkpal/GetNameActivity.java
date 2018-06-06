@@ -66,7 +66,7 @@ public class GetNameActivity extends AppCompatActivity {
         if(!TextUtils.isEmpty(tempName)){
             databaseUser.child(s).child("name").setValue(tempName);
 
-            Intent intent = new Intent(GetNameActivity.this,MainActivity.class);
+            Intent intent = new Intent(GetNameActivity.this,DrawerActivity.class);
             startActivity(intent);
             finish();
 

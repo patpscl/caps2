@@ -283,7 +283,12 @@ public class PhoneAuthActivity extends AppCompatActivity implements
 
                                         editor.commit();
 
-                                        //user exists, do something
+                                        Intent y = new Intent(PhoneAuthActivity.this, DrawerActivity.class);
+                                        y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        y.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        y.putExtra("SESSION_USER_ID", userID);
+                                        startActivity(y);
+                                        finish();
                                     } else {
 
                                         SharedPreferences mPreferences;

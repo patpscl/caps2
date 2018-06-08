@@ -46,7 +46,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     {
         mView = inflater.inflate(R.layout.fragment_map, container, false);
 
-       return mView;
+        return mView;
     }
 
     @Override

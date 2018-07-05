@@ -87,8 +87,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public void setUpLocation() {
-        if (ActivityCompat.checkSelfPermission(getActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(getActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(getActivity(), new String[]{
                     Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -122,8 +122,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void displayLocation() {
-        if (ActivityCompat.checkSelfPermission(getActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(getActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
@@ -162,7 +162,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity().getApplicationContext())
+        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
@@ -171,21 +171,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         //di gumagana yung connect hh
 
 
-        if(!mGoogleApiClient.isConnected()){
-            Log.d("PARKPAL","google api client not connected");
+        if(mGoogleApiClient.isConnected()){
+            Log.d("PARKPAL","google api client connected");
+
 
         }
     }
 
     private boolean checkPlayServices() {
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity().getApplicationContext());
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity());
 
         if(resultCode != ConnectionResult.SUCCESS){
             if(GooglePlayServicesUtil.isUserRecoverableError(resultCode))
                 GooglePlayServicesUtil.getErrorDialog(resultCode,getActivity(),PLAY_SERVICES_RESOLUTION_REQUEST).show();
             else
             {
-                Toast.makeText(getActivity().getApplicationContext(), "This device is not supported", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "This device is not supported", Toast.LENGTH_SHORT).show();
                 getActivity().finish();
             }
             return false;
@@ -236,12 +237,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             if(nighttime){
                 success = googleMap.setMapStyle(
                         MapStyleOptions.loadRawResourceStyle(
-                                getActivity().getApplicationContext(), R.raw.nighttime));
+                                getActivity(), R.raw.nighttime));
             }
             else {
                 success = googleMap.setMapStyle(
                         MapStyleOptions.loadRawResourceStyle(
-                                getActivity().getApplicationContext(), R.raw.mapstyle));
+                                getActivity(), R.raw.mapstyle));
             }
             if (!success) {
                 Log.e("MapsActivity", "Styles parsing failed.");
@@ -252,14 +253,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         //end: night time and day time style for maps
 
         // Add a marker in Sydney and move the camera
-        final LatLng starcentrum = new LatLng(15.168758, 120.989917 );
-        mMap.addCircle(new CircleOptions().center(starcentrum).radius(500).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f));
+
+        final LatLng bryan = new LatLng(14.843941, 121.0368626 );
+        mMap.addCircle(new CircleOptions().center(bryan).radius(0.5).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f));
 
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(starcentrum));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(bryan));
         mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
 
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(starcentrum.latitude,starcentrum.longitude),0.5f);
+
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(bryan.latitude,bryan.longitude),0.5f);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
@@ -287,19 +290,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 Log.e("ERROR",""+error);
             }
         });
-        /* mMap.addMarker(new MarkerOptions().position(starcentrum).title("Sample Marker"));
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(starcentrum));
-        mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );*/
 
     }
 
     private void sendNotification(String parkpal, String content) {
-        Notification.Builder builder = new Notification.Builder(getActivity().getApplicationContext()).setSmallIcon(R.mipmap.ic_launcher).setContentTitle(parkpal).setContentText(content);
+        Notification.Builder builder = new Notification.Builder(getActivity()).setSmallIcon(R.mipmap.ic_launcher).setContentTitle(parkpal).setContentText(content);
 
         NotificationManager manager = (NotificationManager)getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         Intent intent = new Intent(getActivity(), DrawerActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(getActivity().getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent contentIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
         builder.setContentIntent(contentIntent);
         Notification notification  = builder.build();
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
@@ -316,8 +316,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void startLocationUpdates() {
-        if(ActivityCompat.checkSelfPermission( getActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission( getActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED     )
+        if(ActivityCompat.checkSelfPermission( getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission( getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED     )
         {
             return;
         }

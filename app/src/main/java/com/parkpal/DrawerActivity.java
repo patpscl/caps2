@@ -41,6 +41,12 @@ public class DrawerActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        MapFragment mapFragment = new MapFragment();
+
+        FragmentManager manager = getSupportFragmentManager();
+        manager.beginTransaction().replace(R.id.mainContent, mapFragment).commitNow();
+
     }
 
     @Override
@@ -82,9 +88,7 @@ public class DrawerActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-          MapFragment mapFragment = new MapFragment();
-          FragmentManager manager = getSupportFragmentManager();
-          manager.beginTransaction().replace(R.id.mainContent, mapFragment).commit();
+
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {

@@ -168,7 +168,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
-        //di gumagana yung connect
+        //di gumagana yung connect hh
 
 
         if(!mGoogleApiClient.isConnected()){

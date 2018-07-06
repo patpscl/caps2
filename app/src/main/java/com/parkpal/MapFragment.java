@@ -78,7 +78,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     DatabaseReference ref;
     GeoFire geoFire;
     Marker mCurrent;
-
+    long tStart;
+ /*   long tEnd = System.currentTimeMillis();
+    long tDelta = tEnd - tStart;
+    double elapsedSeconds = tDelta / 1000.0; end timer*/
     public MapFragment() {
 
     }
@@ -271,17 +274,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
 
 
+
+
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(bryan.latitude,bryan.longitude),0.05f);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 sendNotification("PARKPAL", String.format("Entered fence",key));
+                tStart = System.currentTimeMillis();
+
             }
 
             @Override
             public void onKeyExited(String key) {
 
                 sendNotification("PARKPAL", String.format("Exited fence",key));
+
+
             }
 
             @Override

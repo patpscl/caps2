@@ -20,6 +20,7 @@ import com.google.android.gms.location.LocationServices;
 
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -35,11 +36,13 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -51,6 +54,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Calendar;
 import java.util.Random;
+
+import static android.content.Context.LOCATION_SERVICE;
 
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
@@ -66,8 +71,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
 
-    private static int UPDATE_INTERVAL = 5000;
-    private static int FASTEST_INTERVAL = 3000;
+    private static int UPDATE_INTERVAL = 500;
+    private static int FASTEST_INTERVAL = 300;
     private static int DISPLACEMENT = 10;
 
     DatabaseReference ref;
@@ -131,19 +136,27 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         if (mLastLocation != null) {
             final double latitute = mLastLocation.getLatitude();
             final double longtitute = mLastLocation.getLongitude();
+
             geoFire.setLocation("You", new GeoLocation(latitute, longtitute),
                     new GeoFire.CompletionListener() {
                         @Override
                         public void onComplete(String key, DatabaseError error) {
-                            if (mCurrent != null) {
+                            if(mCurrent!=null)
+                            {
                                 mCurrent.remove();
-                                mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute, longtitute)).title("you"));
+                                mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
 
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute, longtitute), 12.0f));
 
                             }
+                            else{
+                                mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+
+
+                            }
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),20.0f));
                         }
                     });
+
             Log.d("PARKPAL", String.format("Your location was changed: %f / %f", latitute, longtitute));
 
 
@@ -221,17 +234,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         //start: night time and day time style for maps
         Calendar rightNow = Calendar.getInstance();
         int currentHour = rightNow.get(Calendar.HOUR_OF_DAY);
-
-
-
         boolean nighttime = false;
-
         int eighteen = 18;
         int six = 6;
         if (currentHour >= eighteen || currentHour <= six) {
             nighttime = true;
         }
-
         try {
             boolean success = false;
             if(nighttime){
@@ -252,17 +260,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
         //end: night time and day time style for maps
 
-        // Add a marker in Sydney and move the camera
+
 
         final LatLng bryan = new LatLng(14.843941, 121.0368626 );
-        mMap.addCircle(new CircleOptions().center(bryan).radius(0.5).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f));
-
+        mMap.addCircle(new CircleOptions().center(bryan).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
+        mMap.addMarker(new MarkerOptions().position(bryan).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(bryan));
         mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
 
 
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(bryan.latitude,bryan.longitude),0.5f);
+
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(bryan.latitude,bryan.longitude),0.05f);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
@@ -312,19 +321,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         displayLocation();
-        startLocationUpdates();
+            startLocationUpdates();
     }
 
     private void startLocationUpdates() {
+
         if(ActivityCompat.checkSelfPermission( getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission( getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED     )
         {
             return;
         }
 
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (location == null)
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,mLocationRequest,this);
+
     }
 
     @Override

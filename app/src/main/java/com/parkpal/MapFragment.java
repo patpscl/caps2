@@ -5,8 +5,10 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 
@@ -15,17 +17,18 @@ import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,9 +37,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -51,15 +52,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.parkpal.classes.BackgroundDetectedActivitiesService;
+import com.parkpal.classes.Constants;
 
 import java.util.Calendar;
 import java.util.Random;
 
-import static android.content.Context.LOCATION_SERVICE;
-
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener
+        {
 
     GoogleMap mMap;
     MapView mMapView;
@@ -82,9 +84,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
  /*   long tEnd = System.currentTimeMillis();
     long tDelta = tEnd - tStart;
     double elapsedSeconds = tDelta / 1000.0; end timer*/
+
+
+    ///////////////////////ACTIVITY RECOGNITION///////////////////////////
+    private String TAG = MainActivity.class.getSimpleName();
+    BroadcastReceiver broadcastReceiver;
+    ////////////////////////////////////////////////////////////
     public MapFragment() {
 
     }
+    
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,8 +101,111 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         setUpLocation();
         ref = FirebaseDatabase.getInstance().getReference("MyLocation");
         geoFire = new GeoFire(ref);
-    }
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(Constants.BROADCAST_DETECTED_ACTIVITY)) {
+                    int type = intent.getIntExtra("type", -1);
+                    int confidence = intent.getIntExtra("confidence", 0);
+                    handleUserActivity(type, confidence);
+                }
+            }
+        };
 
+    }
+    private void handleUserActivity(int type, int confidence) {
+        String label = getString(R.string.activity_unknown);
+        //int icon = R.drawable.ic_still;
+
+        switch (type) {
+            case DetectedActivity.IN_VEHICLE: {
+                label = getString(R.string.activity_in_vehicle);
+                //icon = R.drawable.ic_driving;
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.ON_BICYCLE: {
+                label = getString(R.string.activity_on_bicycle);
+                //icon = R.drawable.ic_on_bicycle;
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.ON_FOOT: {
+                label = getString(R.string.activity_on_foot);
+                //icon = R.drawable.ic_walking;
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.RUNNING: {
+                label = getString(R.string.activity_running);
+                //icon = R.drawable.ic_running;
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.STILL: {
+                label = getString(R.string.activity_still);
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.TILTING: {
+                label = getString(R.string.activity_tilting);
+                //icon = R.drawable.ic_tilting;
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.WALKING: {
+                label = getString(R.string.activity_walking);
+                //icon = R.drawable.ic_walking;
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+            case DetectedActivity.UNKNOWN: {
+                label = getString(R.string.activity_unknown);
+                String text = "User Activity: "+label+"\nConfidence: "+confidence;
+                Toast.makeText(getActivity(),
+                        text,
+                        Toast.LENGTH_SHORT)
+                        .show();
+                break;
+            }
+        }
+        Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
+        if (confidence > Constants.CONFIDENCE) {
+            String text = "User Activity: "+label+"\nConfidence: "+confidence;
+            Toast.makeText(getActivity(),
+                    text,
+                    Toast.LENGTH_SHORT)
+                    .show();
+        }
+    }
     public void setUpLocation() {
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -112,7 +224,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -228,6 +339,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         SupportMapFragment fm =(SupportMapFragment)getChildFragmentManager().findFragmentById(R.id.map1);
         fm.getMapAsync(this);
 
+
+
     }
 
     @Override
@@ -273,28 +386,26 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
 
 
-
-
-
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(bryan.latitude,bryan.longitude),0.05f);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 sendNotification("PARKPAL", String.format("Entered fence",key));
                 tStart = System.currentTimeMillis();
-
+                startTracking();
             }
 
             @Override
             public void onKeyExited(String key) {
 
                 sendNotification("PARKPAL", String.format("Exited fence",key));
-
+                stopTracking();
 
             }
 
             @Override
             public void onKeyMoved(String key, GeoLocation location) {
+                startTracking();
                 sendNotification("PARKPAL", String.format("moved inside fence",key));
             }
 
@@ -355,10 +466,29 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     }
 
-
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
         displayLocation();
+    }
+    //////////////////////
+    @Override
+    public void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(broadcastReceiver,
+                new IntentFilter(Constants.BROADCAST_DETECTED_ACTIVITY));
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(broadcastReceiver);
+    }
+    private void startTracking() {
+        Intent intent = new Intent(getActivity(), BackgroundDetectedActivitiesService.class);
+        getActivity().startService(intent);
+    }
+    private void stopTracking() {
+        Intent intent = new Intent(getActivity(), BackgroundDetectedActivitiesService.class);
+        getActivity().stopService(intent);
     }
 }

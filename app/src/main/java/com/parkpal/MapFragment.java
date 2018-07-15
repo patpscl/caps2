@@ -62,12 +62,14 @@ import java.util.Random;
 
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,GoogleMap.OnMarkerClickListener
         {
 
     GoogleMap mMap;
     MapView mMapView;
     View mView;
+    private Marker myMarker;
+
     private static final int MY_PERMISSION_REQUEST_CODE = 7192;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 300193;
 
@@ -269,8 +271,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                             {
                                 mCurrent.remove();
                                 mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
-
-
                             }
                             else{
                                 mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
@@ -394,15 +394,48 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         for (DataSnapshot dsp : dataSnapshot.getChildren()) {
                             Double latitude;
                             Double longtitude;
-
+                            String parkName;
 
                             latitude = Double.valueOf(dsp.child("lat").getValue(Double.class));
                             longtitude = Double.valueOf(dsp.child("long").getValue(Double   .class));
+                            parkName  = String.valueOf(dsp.child("parkName").getValue(String.class));
 
                             LatLng Parking = new LatLng(latitude,longtitude );
 
                             mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
-                            mMap.addMarker(new MarkerOptions().position(Parking).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
+                            myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
+
+
+                            mMap.setOnMarkerClickListener(marker -> {
+                                if (marker.getTitle().equals("Coreon Gate")) {// if marker source is clicked
+                                    Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
+
+
+                                    GetInfoFragment nextFrag = new GetInfoFragment();
+                                    getActivity().getSupportFragmentManager().beginTransaction()
+                                            .replace(R.id.mainContent, nextFrag, "findThisFragment")
+                                            .addToBackStack(null)
+                                            .commit();
+                                } else if (marker.getTitle().equals("Corinthian Carpark")) {// if marker source is clicked{
+                                    Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
+
+                                GetInfoFragment nextFrag = new GetInfoFragment();
+                                getActivity().getSupportFragmentManager().beginTransaction()
+                                        .replace(R.id.mainContent, nextFrag, "findThisFragment")
+                                        .addToBackStack(null)
+                                        .commit();
+                            }
+                                else if (marker.getTitle().equals("Premier Parking Lot")) {// if marker source is clicked{
+
+                                    Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
+                            GetInfoFragment nextFrag = new GetInfoFragment();
+                            getActivity().getSupportFragmentManager().beginTransaction()
+                                    .replace(R.id.mainContent, nextFrag, "findThisFragment")
+                                    .addToBackStack(null)
+                                    .commit();
+                        }
+                                return true;
+                            });
 
                             //mMap.moveCamera(CameraUpdateFactory.newLatLng(Parking));
                             //mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
@@ -413,7 +446,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                 public void onKeyEntered(String key, GeoLocation location) {
                                     sendNotification("PARKPAL", String.format("Entered fence",key));
                                     tStart = System.currentTimeMillis();
-                                    startTracking();
+                                    //startTracking();
                                 }
 
                                 @Override
@@ -528,4 +561,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         Intent intent = new Intent(getActivity(), BackgroundDetectedActivitiesService.class);
         getActivity().stopService(intent);
     }
-}
+
+            @Override
+            public boolean onMarkerClick(final Marker marker) {
+                if (marker.equals(myMarker))
+                {
+                    Toast.makeText(getActivity(),
+                            "Insert Marker Here",
+                            Toast.LENGTH_SHORT)
+                            .show();
+                    return true;
+                }
+
+                return true;
+
+            }
+        }

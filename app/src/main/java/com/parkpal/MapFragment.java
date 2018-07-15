@@ -49,9 +49,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.parkpal.classes.BackgroundDetectedActivitiesService;
 import com.parkpal.classes.Constants;
 
@@ -77,11 +79,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private static int FASTEST_INTERVAL = 300;
     private static int DISPLACEMENT = 10;
 
-    DatabaseReference ref;
+    DatabaseReference geoRef;
+
+    DatabaseReference parkingRef;
     GeoFire geoFire;
     Marker mCurrent;
     long tStart;
- /*   long tEnd = System.currentTimeMillis();
+    /*long tEnd System.currentTimeMillis();
     long tDelta = tEnd - tStart;
     double elapsedSeconds = tDelta / 1000.0; end timer*/
 
@@ -99,8 +103,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpLocation();
-        ref = FirebaseDatabase.getInstance().getReference("MyLocation");
-        geoFire = new GeoFire(ref);
+
+        geoRef = FirebaseDatabase.getInstance().getReference("MyLocation");
+        geoFire = new GeoFire(geoRef);
+
+        parkingRef = FirebaseDatabase.getInstance().getReference("parkingLocations");
+
+        //activity recog
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -246,6 +255,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             return;
         }
 
+
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
             final double latitute = mLastLocation.getLatitude();
@@ -376,49 +386,76 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
         //end: night time and day time style for maps
 
+        parkingRef.addValueEventListener(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        for (DataSnapshot dsp : dataSnapshot.getChildren()) {
+                            Double latitude;
+                            Double longtitude;
 
 
-        final LatLng bryan = new LatLng(14.843941, 121.0368626 );
-        mMap.addCircle(new CircleOptions().center(bryan).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
-        mMap.addMarker(new MarkerOptions().position(bryan).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
+                            latitude = Double.valueOf(dsp.child("lat").getValue(Double.class));
+                            longtitude = Double.valueOf(dsp.child("long").getValue(Double   .class));
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(bryan));
-        mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
+                            LatLng Parking = new LatLng(latitude,longtitude );
+
+                            mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
+                            mMap.addMarker(new MarkerOptions().position(Parking).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
+
+                            //mMap.moveCamera(CameraUpdateFactory.newLatLng(Parking));
+                            //mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
+
+                            GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(Parking.latitude,Parking.longitude),0.05f);
+                            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+                                @Override
+                                public void onKeyEntered(String key, GeoLocation location) {
+                                    sendNotification("PARKPAL", String.format("Entered fence",key));
+                                    tStart = System.currentTimeMillis();
+                                    startTracking();
+                                }
+
+                                @Override
+                                public void onKeyExited(String key) {
+
+                                    sendNotification("PARKPAL", String.format("Exited fence",key));
+                                    stopTracking();
+
+                                }
+
+                                @Override
+                                public void onKeyMoved(String key, GeoLocation location) {
+                                    startTracking();
+                                    sendNotification("PARKPAL", String.format("moved inside fence",key));
+                                }
+
+                                @Override
+                                public void onGeoQueryReady() {
+
+                                }
+
+                                @Override
+                                public void onGeoQueryError(DatabaseError error) {
+                                    Log.e("ERROR",""+error);
+                                }
+                            });
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
 
 
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(bryan.latitude,bryan.longitude),0.05f);
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-            @Override
-            public void onKeyEntered(String key, GeoLocation location) {
-                sendNotification("PARKPAL", String.format("Entered fence",key));
-                tStart = System.currentTimeMillis();
-                startTracking();
-            }
 
-            @Override
-            public void onKeyExited(String key) {
 
-                sendNotification("PARKPAL", String.format("Exited fence",key));
-                stopTracking();
 
-            }
 
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-                startTracking();
-                sendNotification("PARKPAL", String.format("moved inside fence",key));
-            }
-
-            @Override
-            public void onGeoQueryReady() {
-
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-                Log.e("ERROR",""+error);
-            }
-        });
 
 
     }

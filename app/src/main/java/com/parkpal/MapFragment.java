@@ -49,6 +49,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -63,13 +65,14 @@ import java.util.Random;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,GoogleMap.OnMarkerClickListener
-        {
+    {
 
     GoogleMap mMap;
     MapView mMapView;
     View mView;
     private Marker myMarker;
-
+    boolean isInVehicle;
+    boolean isInsideParking;
     private static final int MY_PERMISSION_REQUEST_CODE = 7192;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 300193;
 
@@ -82,14 +85,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private static int DISPLACEMENT = 10;
 
     DatabaseReference geoRef;
-
+    FirebaseUser currentFirebaseUser;
     DatabaseReference parkingRef;
     GeoFire geoFire;
     Marker mCurrent;
     long tStart;
-    /*long tEnd System.currentTimeMillis();
-    long tDelta = tEnd - tStart;
-    double elapsedSeconds = tDelta / 1000.0; end timer*/
+    long tEnd;
+    long tDelta;
+    double elapsedSeconds;
 
 
     ///////////////////////ACTIVITY RECOGNITION///////////////////////////
@@ -106,9 +109,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         super.onCreate(savedInstanceState);
         setUpLocation();
 
-        geoRef = FirebaseDatabase.getInstance().getReference("MyLocation");
+        geoRef = FirebaseDatabase.getInstance().getReference("userLocation");
         geoFire = new GeoFire(geoRef);
-
+        currentFirebaseUser = FirebaseAuth.getInstance().getCurrentUser() ;
         parkingRef = FirebaseDatabase.getInstance().getReference("parkingLocations");
 
         //activity recog
@@ -122,7 +125,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
             }
         };
-
     }
     private void handleUserActivity(int type, int confidence) {
         String label = getString(R.string.activity_unknown);
@@ -137,60 +139,28 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         text,
                         Toast.LENGTH_SHORT)
                         .show();
-                break;
-            }
-            case DetectedActivity.ON_BICYCLE: {
-                label = getString(R.string.activity_on_bicycle);
-                //icon = R.drawable.ic_on_bicycle;
-                String text = "User Activity: "+label+"\nConfidence: "+confidence;
-                Toast.makeText(getActivity(),
-                        text,
-                        Toast.LENGTH_SHORT)
-                        .show();
+                isInVehicle = true;
                 break;
             }
             case DetectedActivity.ON_FOOT: {
                 label = getString(R.string.activity_on_foot);
                 //icon = R.drawable.ic_walking;
-                String text = "User Activity: "+label+"\nConfidence: "+confidence;
-                Toast.makeText(getActivity(),
-                        text,
-                        Toast.LENGTH_SHORT)
-                        .show();
-                break;
-            }
-            case DetectedActivity.RUNNING: {
-                label = getString(R.string.activity_running);
-                //icon = R.drawable.ic_running;
-                String text = "User Activity: "+label+"\nConfidence: "+confidence;
-                Toast.makeText(getActivity(),
-                        text,
-                        Toast.LENGTH_SHORT)
-                        .show();
+                //String text = "User Activity: "+label+"\nConfidence: "+confidence;
+
+                if(isInsideParking)
+                {
+                    tEnd  = System.currentTimeMillis();
+                    tDelta = tEnd - tStart;
+                    elapsedSeconds = tDelta / 1000.0;
+                    Toast.makeText(getActivity(),
+                            "Nakapark ka na"+elapsedSeconds,
+                            Toast.LENGTH_SHORT)
+                            .show();
+                }
                 break;
             }
             case DetectedActivity.STILL: {
                 label = getString(R.string.activity_still);
-                String text = "User Activity: "+label+"\nConfidence: "+confidence;
-                Toast.makeText(getActivity(),
-                        text,
-                        Toast.LENGTH_SHORT)
-                        .show();
-                break;
-            }
-            case DetectedActivity.TILTING: {
-                label = getString(R.string.activity_tilting);
-                //icon = R.drawable.ic_tilting;
-                String text = "User Activity: "+label+"\nConfidence: "+confidence;
-                Toast.makeText(getActivity(),
-                        text,
-                        Toast.LENGTH_SHORT)
-                        .show();
-                break;
-            }
-            case DetectedActivity.WALKING: {
-                label = getString(R.string.activity_walking);
-                //icon = R.drawable.ic_walking;
                 String text = "User Activity: "+label+"\nConfidence: "+confidence;
                 Toast.makeText(getActivity(),
                         text,
@@ -263,7 +233,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             final double latitute = mLastLocation.getLatitude();
             final double longtitute = mLastLocation.getLongitude();
 
-            geoFire.setLocation("You", new GeoLocation(latitute, longtitute),
+            geoFire.setLocation(currentFirebaseUser.getUid(), new GeoLocation(latitute, longtitute),
                     new GeoFire.CompletionListener() {
                         @Override
                         public void onComplete(String key, DatabaseError error) {
@@ -274,15 +244,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                             }
                             else{
                                 mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
-
-
                             }
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),20.0f));
                         }
                     });
 
             Log.d("PARKPAL", String.format("Your location was changed: %f / %f", latitute, longtitute));
-
 
         } else
             Log.d("PARKPAL", "Cannot get your location");
@@ -349,8 +316,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         SupportMapFragment fm =(SupportMapFragment)getChildFragmentManager().findFragmentById(R.id.map1);
         fm.getMapAsync(this);
 
-
-
     }
 
     @Override
@@ -405,7 +370,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                             mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
                             myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
 
-
                             mMap.setOnMarkerClickListener(marker -> {
                                 if (marker.getTitle().equals("Coreon Gate")) {// if marker source is clicked
                                     Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
@@ -445,13 +409,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                 @Override
                                 public void onKeyEntered(String key, GeoLocation location) {
                                     sendNotification("PARKPAL", String.format("Entered fence",key));
-                                    tStart = System.currentTimeMillis();
-                                    //startTracking();
+                                    if(isInVehicle)
+                                    {
+                                        tStart = System.currentTimeMillis();
+                                        isInsideParking = true;
+                                    }
                                 }
 
                                 @Override
-                                public void onKeyExited(String key) {
-
+                                 public void onKeyExited(String key) {
+                                    isInsideParking = false;
                                     sendNotification("PARKPAL", String.format("Exited fence",key));
                                     stopTracking();
 
@@ -484,18 +451,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
         );
 
-
-
-
-
-
-
-
     }
 
     private void sendNotification(String parkpal, String content) {
         Notification.Builder builder = new Notification.Builder(getActivity()).setSmallIcon(R.mipmap.ic_launcher).setContentTitle(parkpal).setContentText(content);
-
         NotificationManager manager = (NotificationManager)getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         Intent intent = new Intent(getActivity(), DrawerActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);

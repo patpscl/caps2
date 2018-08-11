@@ -249,8 +249,21 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),18.0f));
                             }
                             else{
+                                new MaterialStyledDialog.Builder(getActivity())
+                                        .setTitle("Oh no!").setPositiveText("Exit")
+                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                                        @Override
+                                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                            getActivity().finish();
 
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),11.0f));
+                                                        }
+                                                    }
+                                        ).setIcon(R.drawable.logo)
+
+                                        .setDescription("Cannot get your current location. Please enable location permission for ParkPal.")
+                                        .show();
+
+                                  mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),11.0f));
                             }
 
                         }
@@ -260,19 +273,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         } else{
             Log.d("PARKPAL", "Cannot get your location");
-            new MaterialStyledDialog.Builder(getActivity())
-                    .setTitle("Oh no!").setPositiveText("Exit")
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                    @Override
-                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                        getActivity().finish();
 
-                                    }
-                                }
-                    ).setIcon(R.drawable.logo)
-
-                    .setDescription("Cannot get your current location. Please enable location permission for ParkPal.")
-                    .show();
         }
 
     }

@@ -12,10 +12,13 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
+import com.github.javiersantos.materialstyleddialogs.MaterialStyledDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
@@ -65,7 +68,7 @@ import java.util.Random;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,GoogleMap.OnMarkerClickListener
-    {
+{
 
     GoogleMap mMap;
     MapView mMapView;
@@ -102,7 +105,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public MapFragment() {
 
     }
-    
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -144,6 +147,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             }
             case DetectedActivity.ON_FOOT: {
                 label = getString(R.string.activity_on_foot);
+
                 //icon = R.drawable.ic_walking;
                 //String text = "User Activity: "+label+"\nConfidence: "+confidence;
 
@@ -196,6 +200,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     Manifest.permission.ACCESS_FINE_LOCATION
 
             }, MY_PERMISSION_REQUEST_CODE);
+              setUpLocation();
         } else {
             if (checkPlayServices()) {
                 buildGoogleApiClient();
@@ -227,7 +232,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             return;
         }
 
-
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
             final double latitute = mLastLocation.getLatitude();
@@ -237,22 +241,40 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     new GeoFire.CompletionListener() {
                         @Override
                         public void onComplete(String key, DatabaseError error) {
+                            mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
                             if(mCurrent!=null)
                             {
                                 mCurrent.remove();
                                 mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),18.0f));
                             }
                             else{
-                                mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),11.0f));
                             }
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),20.0f));
+
                         }
                     });
 
             Log.d("PARKPAL", String.format("Your location was changed: %f / %f", latitute, longtitute));
 
-        } else
+        } else{
             Log.d("PARKPAL", "Cannot get your location");
+            new MaterialStyledDialog.Builder(getActivity())
+                    .setTitle("Oh no!").setPositiveText("Exit")
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                    @Override
+                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                        getActivity().finish();
+
+                                    }
+                                }
+                    ).setIcon(R.drawable.logo)
+
+                    .setDescription("Cannot get your current location. Please enable location permission for ParkPal.")
+                    .show();
+        }
+
     }
 
     private void createLocationRequest() {
@@ -351,6 +373,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
         //end: night time and day time style for maps
 
+
+        //set default camera to makati
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),10.0f));
+
         parkingRef.addValueEventListener(
                 new ValueEventListener() {
                     @Override
@@ -383,21 +409,21 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                 } else if (marker.getTitle().equals("Corinthian Carpark")) {// if marker source is clicked{
                                     Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
 
-                                GetInfoFragment nextFrag = new GetInfoFragment();
-                                getActivity().getSupportFragmentManager().beginTransaction()
-                                        .replace(R.id.mainContent, nextFrag, "findThisFragment")
-                                        .addToBackStack(null)
-                                        .commit();
-                            }
+                                    GetInfoFragment nextFrag = new GetInfoFragment();
+                                    getActivity().getSupportFragmentManager().beginTransaction()
+                                            .replace(R.id.mainContent, nextFrag, "findThisFragment")
+                                            .addToBackStack(null)
+                                            .commit();
+                                }
                                 else if (marker.getTitle().equals("Premier Parking Lot")) {// if marker source is clicked{
 
                                     Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
-                            GetInfoFragment nextFrag = new GetInfoFragment();
-                            getActivity().getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.mainContent, nextFrag, "findThisFragment")
-                                    .addToBackStack(null)
-                                    .commit();
-                        }
+                                    GetInfoFragment nextFrag = new GetInfoFragment();
+                                    getActivity().getSupportFragmentManager().beginTransaction()
+                                            .replace(R.id.mainContent, nextFrag, "findThisFragment")
+                                            .addToBackStack(null)
+                                            .commit();
+                                }
                                 return true;
                             });
 
@@ -417,7 +443,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                 }
 
                                 @Override
-                                 public void onKeyExited(String key) {
+                                public void onKeyExited(String key) {
                                     isInsideParking = false;
                                     sendNotification("PARKPAL", String.format("Exited fence",key));
                                     stopTracking();
@@ -470,7 +496,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         displayLocation();
-            startLocationUpdates();
+        startLocationUpdates();
     }
 
     private void startLocationUpdates() {
@@ -521,18 +547,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         getActivity().stopService(intent);
     }
 
-            @Override
-            public boolean onMarkerClick(final Marker marker) {
-                if (marker.equals(myMarker))
-                {
-                    Toast.makeText(getActivity(),
-                            "Insert Marker Here",
-                            Toast.LENGTH_SHORT)
-                            .show();
-                    return true;
-                }
-
-                return true;
-
-            }
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+        if (marker.equals(myMarker))
+        {
+            Toast.makeText(getActivity(),
+                    "Insert Marker Here",
+                    Toast.LENGTH_SHORT)
+                    .show();
+            return true;
         }
+
+        return true;
+
+    }
+}

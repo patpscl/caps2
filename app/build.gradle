@@ -24,6 +24,8 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.javiersantos:MaterialStyledDialogs:2.1'
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.gms:play-services-maps:15.0.1'
     implementation 'com.google.android.gms:play-services-location:15.0.1'

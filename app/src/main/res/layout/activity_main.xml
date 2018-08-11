@@ -9,10 +9,12 @@
     tools:context="com.parkpal.MainActivity">
 
 
-    <ImageView android:id="@+id/splashscreen" android:layout_width="wrap_content"
+    <ImageView
+        android:id="@+id/splashscreen"
+        android:layout_width="wrap_content"
         android:layout_height="fill_parent"
-        android:src="@drawable/logo"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:src="@drawable/logo" />
 
 
 

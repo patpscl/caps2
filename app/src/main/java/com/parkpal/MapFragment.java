@@ -21,11 +21,15 @@ import com.firebase.geofire.GeoQueryEventListener;
 import com.github.javiersantos.materialstyleddialogs.MaterialStyledDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
 import android.graphics.Color;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -52,6 +56,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -61,14 +66,15 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.parkpal.classes.BackgroundDetectedActivitiesService;
 import com.parkpal.classes.Constants;
+import com.parkpal.classes.ParkingLocations;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Random;
 
 
-public class MapFragment extends Fragment implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,GoogleMap.OnMarkerClickListener
-{
+public class MapFragment extends Fragment implements OnMapReadyCallback{
 
     GoogleMap mMap;
     MapView mMapView;
@@ -97,6 +103,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     long tDelta;
     double elapsedSeconds;
 
+    private Double latitude;
+    private Double longtitude;
+    private String parkName;
+    private String circlingTime;
+
+    /////FusedLocationProviderClient
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private static final int MY_PERMISSION_REQUEST_FINE_LOCATION = 101;
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
+    private boolean updatesOn = false;
+
 
     ///////////////////////ACTIVITY RECOGNITION///////////////////////////
     private String TAG = MainActivity.class.getSimpleName();
@@ -105,8 +123,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public MapFragment() {
 
     }
-
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +144,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 }
             }
         };
+
+
+
+
+
+
+
     }
     private void handleUserActivity(int type, int confidence) {
         String label = getString(R.string.activity_unknown);
@@ -200,14 +223,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     Manifest.permission.ACCESS_FINE_LOCATION
 
             }, MY_PERMISSION_REQUEST_CODE);
-              setUpLocation();
+            setUpLocation();
         } else {
-            if (checkPlayServices()) {
-                buildGoogleApiClient();
-                createLocationRequest();
-                displayLocation();
-            }
-
+            createLocationRequest();
+            displayLocation();
+            startLocationUpdates();
         }
     }
     @Override
@@ -215,122 +235,86 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         switch (requestCode) {
             case MY_PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    if (checkPlayServices()) {
-                        buildGoogleApiClient();
                         createLocationRequest();
                         displayLocation();
-                    }
+                        startLocationUpdates();
                 }
                 break;
         }
     }
-
     private void displayLocation() {
-        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        //fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        mLastLocation = location;
+                        final double latitute = mLastLocation.getLatitude();
+                        final double longtitute = mLastLocation.getLongitude();
+
+                        geoFire.setLocation(currentFirebaseUser.getUid(), new GeoLocation(latitute, longtitute),
+                                new GeoFire.CompletionListener() {
+                                    @Override
+                                    public void onComplete(String key, DatabaseError error) {
+                                        mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+                                        if(mCurrent!=null)
+                                        {
+                                            mCurrent.remove();
+                                            mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+                                           // mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),18.0f));
+                                        }
+                                        else{
+                                            new MaterialStyledDialog.Builder(getActivity())
+                                                    .setTitle("Oh no!").setPositiveText("Exit")
+                                                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                                                    @Override
+                                                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                                        getActivity().finish();
+
+                                                                    }
+                                                                }
+                                                    ).setIcon(R.drawable.logo)
+
+                                                    .setDescription("Cannot get your current location. Please enable location permission for ParkPal.")
+                                                    .show();
+
+                                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),11.0f));
+                                        }
+
+                                    }
+                                });
+
+                        Log.d("PARKPAL", String.format("Your location was changed: %f / %f", latitute, longtitute));
+                    }
+                    else{
+                        Toast.makeText(getActivity(),"Cannot get your location",Toast.LENGTH_LONG);
+                    }
+                }
+            });
         }
-
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation != null) {
-            final double latitute = mLastLocation.getLatitude();
-            final double longtitute = mLastLocation.getLongitude();
-
-            geoFire.setLocation(currentFirebaseUser.getUid(), new GeoLocation(latitute, longtitute),
-                    new GeoFire.CompletionListener() {
-                        @Override
-                        public void onComplete(String key, DatabaseError error) {
-                            mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
-                            if(mCurrent!=null)
-                            {
-                                mCurrent.remove();
-                                mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),18.0f));
-                            }
-                            else{
-                                new MaterialStyledDialog.Builder(getActivity())
-                                        .setTitle("Oh no!").setPositiveText("Exit")
-                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                                        @Override
-                                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                                            getActivity().finish();
-
-                                                        }
-                                                    }
-                                        ).setIcon(R.drawable.logo)
-
-                                        .setDescription("Cannot get your current location. Please enable location permission for ParkPal.")
-                                        .show();
-
-                                  mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),11.0f));
-                            }
-
-                        }
-                    });
-
-            Log.d("PARKPAL", String.format("Your location was changed: %f / %f", latitute, longtitute));
-
-        } else{
-            Log.d("PARKPAL", "Cannot get your location");
-
-        }
-
-    }
-
-    private void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
-
-
-    }
-
-    private void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-        //di gumagana yung connect hh
-
-
-        if(mGoogleApiClient.isConnected()){
-            Log.d("PARKPAL","google api client connected");
-
-
-        }
-    }
-
-    private boolean checkPlayServices() {
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity());
-
-        if(resultCode != ConnectionResult.SUCCESS){
-            if(GooglePlayServicesUtil.isUserRecoverableError(resultCode))
-                GooglePlayServicesUtil.getErrorDialog(resultCode,getActivity(),PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            else
-            {
-                Toast.makeText(getActivity(), "This device is not supported", Toast.LENGTH_SHORT).show();
-                getActivity().finish();
+        else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_FINE_LOCATION);
+                }
             }
-            return false;
-
-        }
-        return true;
     }
-
+    private void createLocationRequest() {
+        /////////////////////////
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(3000);
+        locationRequest.setFastestInterval(1000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        /////////////////////////
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
-    {
+                             Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_map, container, false);
 
         return mView;
     }
-
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -340,6 +324,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         fm.getMapAsync(this);
 
     }
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -376,7 +361,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
 
         //set default camera to makati
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),10.0f));
+        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),10.0f));
 
         parkingRef.addValueEventListener(
                 new ValueEventListener() {
@@ -384,48 +369,43 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                         for (DataSnapshot dsp : dataSnapshot.getChildren()) {
-                            Double latitude;
-                            Double longtitude;
-                            String parkName;
+
 
                             latitude = Double.valueOf(dsp.child("lat").getValue(Double.class));
                             longtitude = Double.valueOf(dsp.child("long").getValue(Double   .class));
                             parkName  = String.valueOf(dsp.child("parkName").getValue(String.class));
+                            circlingTime = String.valueOf(dsp.child("averageCirclingTime").getValue(Integer.class));
 
                             LatLng Parking = new LatLng(latitude,longtitude );
 
                             mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
                             myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
 
-                            mMap.setOnMarkerClickListener(marker -> {
-                                if (marker.getTitle().equals("Coreon Gate")) {// if marker source is clicked
-                                    Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
+                            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                                @Override
+                                public boolean onMarkerClick(Marker marker) {
+                                    //Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
+                                    for (DataSnapshot dsp : dataSnapshot.getChildren()) {
 
+                                        parkName  = String.valueOf(dsp.child("parkName").getValue(String.class));
+                                        circlingTime = String.valueOf(dsp.child("averageCirclingTime").getValue(Integer.class));
+                                        if(marker.getTitle().equals(parkName)){
+                                            new MaterialStyledDialog
+                                                    .Builder(getActivity())
+                                                    .setTitle(marker.getTitle()).setPositiveText("Exit")
+                                                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                                                    @Override
+                                                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
 
-                                    GetInfoFragment nextFrag = new GetInfoFragment();
-                                    getActivity().getSupportFragmentManager().beginTransaction()
-                                            .replace(R.id.mainContent, nextFrag, "findThisFragment")
-                                            .addToBackStack(null)
-                                            .commit();
-                                } else if (marker.getTitle().equals("Corinthian Carpark")) {// if marker source is clicked{
-                                    Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
-
-                                    GetInfoFragment nextFrag = new GetInfoFragment();
-                                    getActivity().getSupportFragmentManager().beginTransaction()
-                                            .replace(R.id.mainContent, nextFrag, "findThisFragment")
-                                            .addToBackStack(null)
-                                            .commit();
+                                                                    }
+                                                                }
+                                                    ).setIcon(R.drawable.logo)
+                                                    .setDescription("Average Circling Time: " + circlingTime)
+                                                    .show();
+                                        }
+                                    }
+                                    return true;
                                 }
-                                else if (marker.getTitle().equals("Premier Parking Lot")) {// if marker source is clicked{
-
-                                    Toast.makeText(getContext(), marker.getTitle(), Toast.LENGTH_SHORT).show();// display toast
-                                    GetInfoFragment nextFrag = new GetInfoFragment();
-                                    getActivity().getSupportFragmentManager().beginTransaction()
-                                            .replace(R.id.mainContent, nextFrag, "findThisFragment")
-                                            .addToBackStack(null)
-                                            .commit();
-                                }
-                                return true;
                             });
 
                             //mMap.moveCamera(CameraUpdateFactory.newLatLng(Parking));
@@ -479,7 +459,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         );
 
     }
-
     private void sendNotification(String parkpal, String content) {
         Notification.Builder builder = new Notification.Builder(getActivity()).setSmallIcon(R.mipmap.ic_launcher).setContentTitle(parkpal).setContentText(content);
         NotificationManager manager = (NotificationManager)getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -493,41 +472,66 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         manager.notify(new Random().nextInt(),notification);
 
     }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        displayLocation();
-        startLocationUpdates();
-    }
-
     private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    super.onLocationResult(locationResult);
+                    for (Location location : locationResult.getLocations()) {
+                        if (location != null) {
 
-        if(ActivityCompat.checkSelfPermission( getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission( getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED     )
-        {
-            return;
+
+                            mLastLocation = location;
+                            final double latitute = mLastLocation.getLatitude();
+                            final double longtitute = mLastLocation.getLongitude();
+
+                            geoFire.setLocation(currentFirebaseUser.getUid(), new GeoLocation(latitute, longtitute),
+                                    new GeoFire.CompletionListener() {
+                                        @Override
+                                        public void onComplete(String key, DatabaseError error) {
+                                            //mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+                                            if(mCurrent!=null)
+                                            {
+                                                mCurrent.remove();
+                                                mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),18.0f));
+                                            }
+                                            else{
+                                                new MaterialStyledDialog.Builder(getActivity())
+                                                        .setTitle("Oh no!").setPositiveText("Exit")
+                                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                                                        @Override
+                                                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                                            getActivity().finish();
+
+                                                                        }
+                                                                    }
+                                                        ).setIcon(R.drawable.logo)
+
+                                                        .setDescription("Cannot get your current location. Please enable location permission for ParkPal.")
+                                                        .show();
+
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.555338, 121.023233),11.0f));
+                                            }
+
+                                        }
+                                    });
+
+
+                        }
+                    }
+                }
+            };
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+
         }
-
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,mLocationRequest,this);
-
+        else{
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_FINE_LOCATION);
+            }
+        }
     }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mLastLocation = location;
-        displayLocation();
-    }
-    //////////////////////
     @Override
     public void onResume() {
         super.onResume();
@@ -548,18 +552,4 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         getActivity().stopService(intent);
     }
 
-    @Override
-    public boolean onMarkerClick(final Marker marker) {
-        if (marker.equals(myMarker))
-        {
-            Toast.makeText(getActivity(),
-                    "Insert Marker Here",
-                    Toast.LENGTH_SHORT)
-                    .show();
-            return true;
-        }
-
-        return true;
-
-    }
 }

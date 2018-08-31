@@ -102,7 +102,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     long tEnd;
     long tDelta;
     double elapsedSeconds;
-
+    String currentParkID;
     private Double latitude;
     private Double longtitude;
     private String parkName;
@@ -183,6 +183,25 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
                             "Nakapark ka na"+elapsedSeconds,
                             Toast.LENGTH_SHORT)
                             .show();
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("parkingLocations");
+                    ref.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for (DataSnapshot dsp : dataSnapshot.getChildren()) {
+                                if(String.valueOf(dsp.child("parkingID").getValue(String.class)).equals(currentParkID))
+                                {
+                                    DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("parkingLocations").child(dsp.getKey()).child("density");
+                                    ref1.child(currentFirebaseUser.getUid()).setValue(elapsedSeconds);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+
                 }
                 break;
             }
@@ -370,12 +389,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
 
                         for (DataSnapshot dsp : dataSnapshot.getChildren()) {
 
-
+                            String parkId;
                             latitude = Double.valueOf(dsp.child("lat").getValue(Double.class));
-                            longtitude = Double.valueOf(dsp.child("long").getValue(Double   .class));
+                            longtitude = Double.valueOf(dsp.child("long").getValue(Double.class));
                             parkName  = String.valueOf(dsp.child("parkName").getValue(String.class));
                             circlingTime = String.valueOf(dsp.child("averageCirclingTime").getValue(Integer.class));
-
+                            parkId  = String.valueOf(dsp.child("parkingID").getValue(String.class));
                             LatLng Parking = new LatLng(latitude,longtitude );
 
                             mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
@@ -415,6 +434,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
                             geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
                                 @Override
                                 public void onKeyEntered(String key, GeoLocation location) {
+                                    currentParkID = parkId;
                                     sendNotification("PARKPAL", String.format("Entered fence",key));
                                     if(isInVehicle)
                                     {

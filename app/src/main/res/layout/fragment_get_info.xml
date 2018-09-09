@@ -1,14 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     tools:context=".GetInfoFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:id="@+id/txtClose"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="end"
+        android:textSize="20dp"
+        android:text="X"
+        android:textStyle="bold"
+        android:gravity="center"
+        />
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/parkNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:text="ParkName"
+            android:textSize="20dp" />
+
+    <TextView
+        android:id="@+id/parkCirclingTime"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:background="@color/circlingTimeRed"
+        android:gravity="center"
+        android:text="Circling Time"
+
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="First 3 hours:"
+        android:textSize="20dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="Succeeding Hours:"
+        android:textSize="20dp" />
+
+    <TextView
+        android:id="@+id/parkDetailText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingTop="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="Lorem ipsum dolor sit amet..."
+        android:textSize="20dp" />
+    <Button
+        android:id="@+id/navigateBtn"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/circlingTimeGreen"
+        android:text="Navigate"
+        />
+
+  <!--  <android.support.design.button.MaterialButton
+        android:id="@+id/material_icon_button"
+        style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:text="Navigate"
+        android:layout_gravity="center"
+        app:icon="@drawable/ic_menu_share"
+        app:backgroundTint="@color/circlingTimeGreen"/>-->
+</LinearLayout>

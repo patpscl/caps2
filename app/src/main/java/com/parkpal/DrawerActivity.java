@@ -107,8 +107,5 @@ public class DrawerActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
 
-    }
 }

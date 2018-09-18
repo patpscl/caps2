@@ -195,9 +195,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             for (DataSnapshot dsp : dataSnapshot.getChildren()) {
-                                if (String.valueOf(dsp.child("parkingID").getValue(String.class)).equals(currentParkID)) {
+                                if(String.valueOf(dsp.getKey()).equals(currentParkID))
+                                {
                                     DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("parkingLocations").child(dsp.getKey()).child("density");
-                                    ref1.child(currentFirebaseUser.getUid()).setValue(elapsedSeconds);
+                                    ref1.child(currentFirebaseUser.getUid()).child("ctime").setValue(elapsedSeconds/60);
+                                    ref1.child(currentFirebaseUser.getUid()).child("timestamp").setValue(System.currentTimeMillis());
                                 }
                             }
                         }
@@ -207,7 +209,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
                         }
                     });
-
+                    isInsideParking = false; //avoid repetitive uploading of circling time to fb
                 }
                 break;
             }
@@ -371,6 +373,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             Log.e("MapsActivity", "Can't find style. Error: ", e);
         }
         //end: night time and day time style for maps
+
         parkingRef.addValueEventListener(
                 new ValueEventListener() {
                     @Override
@@ -384,9 +387,26 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                             parkId = String.valueOf(dsp.child("parkingID").getValue(String.class));
                             LatLng Parking = new LatLng(latitude, longtitude);
 
-                            mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
-                            myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
+                            if(dsp.child("averageCirclingTime").getValue(Float.class) <= 10)
+                            {
+                                mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#00ff33")).fillColor(0x22025551).strokeWidth(5.0f));
 
+                                myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial)));
+                            }
+                            else if(dsp.child("averageCirclingTime").getValue(Float.class) > 10 || dsp.child("averageCirclingTime").getValue(Float.class) <=15)
+                            {
+                                mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#f44236")).fillColor(0x22025551).strokeWidth(5.0f));
+
+                                myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial_red)));
+
+                            }
+                            else if(dsp.child("averageCirclingTime").getValue(Float.class) > 15)
+                            {
+                                mMap.addCircle(new CircleOptions().center(Parking).radius(50).strokeColor(Color.parseColor("#ff7d1e")).fillColor(0x22025551).strokeWidth(5.0f));
+
+                                myMarker = mMap.addMarker(new MarkerOptions().position(Parking).title(parkName).icon(BitmapDescriptorFactory.fromResource(R.drawable.commercial_orange)));
+
+                            }
                             mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                 @Override
                                 public boolean onMarkerClick(Marker marker) {

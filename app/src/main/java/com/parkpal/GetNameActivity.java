@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,20 +39,26 @@ public class GetNameActivity extends AppCompatActivity {
 
     private EditText addUserName;
     private Button buttonSetUserName;
-
+    private RadioButton user;
+    private RadioButton host;
     private  DatabaseReference databaseUser;
-
+    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_name);
 
+
+
         databaseUser = FirebaseDatabase.getInstance().getReference("users");
 
+        user = findViewById(R.id.user);
+        host = findViewById(R.id.host);
 
         addUserName = findViewById(R.id.field_verification_code);
         buttonSetUserName = findViewById(R.id.button_submit_name);
+
 
         buttonSetUserName.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,11 +70,27 @@ public class GetNameActivity extends AppCompatActivity {
 
     private void addName(){
         String tempName = addUserName.getText().toString().trim();
-        String s = getIntent().getStringExtra("SESSION_USER_ID");
-        if(!TextUtils.isEmpty(tempName)){
-            databaseUser.child(s).child("name").setValue(tempName);
+        String uid = getIntent().getStringExtra("SESSION_USER_ID");
+        String contact = getIntent().getStringExtra("SESSION_CONTACT");
 
-            Intent intent = new Intent(GetNameActivity.this,DrawerActivity.class);
+        SharedPreferences mPreferences;
+
+
+        if(!TextUtils.isEmpty(tempName)){
+            mPreferences = getSharedPreferences("User", MODE_PRIVATE);
+            SharedPreferences.Editor editor = mPreferences.edit();
+            editor.putString("saveuserid", uid);
+            editor.commit();
+
+            databaseUser.child(uid).setValue("true");
+            databaseUser.child(uid).child("contact").setValue(contact);
+            databaseUser.child(uid).child("name").setValue(tempName);
+            databaseUser.child(uid).child("role").setValue(((user.isChecked()) ? "User" : "Host"));
+
+            if(user.isChecked()){
+                intent = new Intent(GetNameActivity.this,DrawerActivity.class);
+            }
+
             startActivity(intent);
             finish();
 

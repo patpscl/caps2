@@ -130,6 +130,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     ///////////////////////ACTIVITY RECOGNITION///////////////////////////
     private String TAG = MainActivity.class.getSimpleName();
     BroadcastReceiver broadcastReceiver;
+    long graceTimeStart;
+    long graceTimeEnd;
+    double elapsedGraceTime;
+    int previousTypeCounter;
+    int previousType = -1;
     ////////////////////////////////////////////////////////////
 
 
@@ -162,73 +167,53 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         };
     }
 
-    private void handleUserActivity(int type, int confidence) {
-        String label = getString(R.string.activity_unknown);
-        switch (type) {
-            case DetectedActivity.IN_VEHICLE: {
-                label = getString(R.string.activity_in_vehicle);
-                //icon = R.drawable.ic_driving;
-                String text = "User Activity: " + label + "\nConfidence: " + confidence;
-                Toast.makeText(getActivity(),
-                        text,
-                        Toast.LENGTH_SHORT)
-                        .show();
-                isInVehicle = true;
-                break;
+    private void handleUserActivity(int type, int confidence) {//FOR CHECKING
+        ///Toast.makeText(getActivity(),"Previous Type Counter:" + previousTypeCounter,Toast.LENGTH_LONG).show();
+        if(previousType == -1){
+            previousType = type;
+        }
+        if(previousType == type){
+            if(previousTypeCounter < 5){
+                previousTypeCounter++;
             }
-            case DetectedActivity.ON_FOOT: {
-                label = getString(R.string.activity_on_foot);
-
-                //icon = R.drawable.ic_walking;
-                //String text = "User Activity: "+label+"\nConfidence: "+confidence;
-
-                if (isInsideParking) {
-                    tEnd = System.currentTimeMillis();
-                    tDelta = tEnd - tStart;
-                    elapsedSeconds = tDelta / 1000.0;
-                    Toast.makeText(getActivity(),
-                            "Nakapark ka na" + elapsedSeconds,
-                            Toast.LENGTH_SHORT)
-                            .show();
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("parkingLocations");
-                    ref.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            for (DataSnapshot dsp : dataSnapshot.getChildren()) {
-                                if(String.valueOf(dsp.getKey()).equals(currentParkID))
-                                {
-                                    DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("parkingLocations").child(dsp.getKey()).child("density");
-                                    ref1.child(currentFirebaseUser.getUid()).child("ctime").setValue(elapsedSeconds/60);
-                                    ref1.child(currentFirebaseUser.getUid()).child("timestamp").setValue(System.currentTimeMillis());
+            else if(previousTypeCounter >= 5){
+                if(previousType == DetectedActivity.STILL || previousType == DetectedActivity.WALKING || previousType == DetectedActivity.RUNNING || previousType == DetectedActivity.ON_FOOT){
+                    if (confidence > Constants.CONFIDENCE) {
+                        if (isInsideParking) {
+                            stopTracking();
+                            tEnd = System.currentTimeMillis();
+                            tDelta = tEnd - tStart;
+                            elapsedSeconds = tDelta / 1000.0;
+                            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("parkingLocations");
+                            ref.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    for (DataSnapshot dsp : dataSnapshot.getChildren()) {
+                                        if (String.valueOf(dsp.child("parkingID").getValue(String.class)).equals(currentParkID)) {
+                                            DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("parkingLocations").child(dsp.getKey()).child("density");
+                                            ref1.child(currentFirebaseUser.getUid()).setValue(elapsedSeconds);
+                                        }
+                                    }
                                 }
-                            }
-                        }
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                                }
+                            });
                         }
-                    });
-                    isInsideParking = false; //avoid repetitive uploading of circling time to fb
+                        tEnd = 0;
+
+                        tStart = 0;
+                        tDelta = 0;
+                        elapsedSeconds = 0;
+                    }
                 }
-                break;
-            }
-            case DetectedActivity.STILL: {
-                label = getString(R.string.activity_still);
-
-                break;
-            }
-            case DetectedActivity.UNKNOWN: {
-                label = getString(R.string.activity_unknown);
-                break;
+                previousTypeCounter = 0;
+                previousType = 0;
             }
         }
-        if (Constants.CONFIDENCE > confidence) {
-            String text = "User Activity: " + label + "\nConfidence: " + confidence;
-            Toast.makeText(getActivity(),
-                    text,
-                    Toast.LENGTH_SHORT)
-                    .show();
+        else{
+            previousTypeCounter = 0 ;
         }
     }
 
@@ -291,6 +276,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 (key, error) -> {
                     //mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute,longtitute)).title("You").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
                     if (mCurrent != null) {//Location Callback
+                        mCurrent.remove();
                         mCurrent = mMap.addMarker(new MarkerOptions().position(new LatLng(latitute, longtitute)).title("New Me").icon(BitmapDescriptorFactory.fromResource(R.drawable.man)));
                        /* mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitute,longtitute),18.0f));
                         Toast.makeText(getActivity(),"Latitude: "+ mCurrent.getPosition().latitude + "\nLongitude: "+ mCurrent.getPosition().longitude,Toast.LENGTH_LONG).show();*/

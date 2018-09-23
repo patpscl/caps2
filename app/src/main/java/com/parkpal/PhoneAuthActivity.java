@@ -259,7 +259,7 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
+                            // Sign in success, update  UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
 
                             FirebaseUser user = task.getResult().getUser();
@@ -274,16 +274,18 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                 @Override
                                 public void onDataChange(DataSnapshot snapshot) {
                                     if (snapshot.getValue() != null) {
+//                                        SharedPreferences mPreferences;
+//                                        mPreferences = getSharedPreferences("User", MODE_PRIVATE);
+//                                        SharedPreferences.Editor editor = mPreferences.edit();
+//                                        editor.putString("saveuserid", userID);
+//
+//                                        editor.commit();
+                                        Intent y;
+//                                        if(snapshot.child("role").getValue(String.class) == String.valueOf("User")){
+                                            y = new Intent(PhoneAuthActivity.this, DrawerActivity.class);
+//                                        }
 
-                                        SharedPreferences mPreferences;
 
-                                        mPreferences = getSharedPreferences("User", MODE_PRIVATE);
-                                        SharedPreferences.Editor editor = mPreferences.edit();
-                                        editor.putString("saveuserid", userID);
-
-                                        editor.commit();
-
-                                        Intent y = new Intent(PhoneAuthActivity.this, DrawerActivity.class);
                                         y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         y.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                         y.putExtra("SESSION_USER_ID", userID);
@@ -291,23 +293,26 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                         finish();
                                     } else {
 
-                                        SharedPreferences mPreferences;
+                                        /*SharedPreferences mPreferences;
 
                                         mPreferences = getSharedPreferences("User", MODE_PRIVATE);
                                         SharedPreferences.Editor editor = mPreferences.edit();
                                         editor.putString("saveuserid", userID);
-                                        editor.commit();
+                                        editor.commit();*/
 
                                         contactno = mPhoneNumberField.getText().toString();
+/*
                                         //user does not exist, do something else
                                         myRef.child("users").child(userID).setValue("true");
                                         //    myRef.child("users").child(userID).child("Name").setValue("true");
                                         myRef.child("users").child(userID).child("contact").setValue(contactno);
                                         myRef.child("users").child(userID).child("name").setValue("-");
+*/
 
                                         Intent y = new Intent(PhoneAuthActivity.this, GetNameActivity.class);
                                         y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         y.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        y.putExtra("SESSION_CONTACT", contactno);
                                         y.putExtra("SESSION_USER_ID", userID);
                                         startActivity(y);
                                         finish();

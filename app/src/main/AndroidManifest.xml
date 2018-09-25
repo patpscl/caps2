@@ -47,6 +47,10 @@
             android:name=".DrawerActivity"
             android:label="@string/title_activity_drawer"
             android:theme="@style/AppTheme" />
+        <activity
+            android:name=".HostDrawerActivity"
+            android:label="ParkPal"
+            android:theme="@style/AppTheme" />
 
         <service
             android:name=".classes.DetectedActivitiesIntentService"

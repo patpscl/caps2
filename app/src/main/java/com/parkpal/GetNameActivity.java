@@ -50,12 +50,6 @@ public class GetNameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_get_name);
 
 
-
-        databaseUser = FirebaseDatabase.getInstance().getReference("users");
-
-        user = findViewById(R.id.user);
-        host = findViewById(R.id.host);
-
         addUserName = findViewById(R.id.field_verification_code);
         buttonSetUserName = findViewById(R.id.button_submit_name);
 
@@ -85,11 +79,8 @@ public class GetNameActivity extends AppCompatActivity {
             databaseUser.child(uid).setValue("true");
             databaseUser.child(uid).child("contact").setValue(contact);
             databaseUser.child(uid).child("name").setValue(tempName);
-            databaseUser.child(uid).child("role").setValue(((user.isChecked()) ? "User" : "Host"));
 
-            if(user.isChecked()){
-                intent = new Intent(GetNameActivity.this,DrawerActivity.class);
-            }
+            intent = new Intent(GetNameActivity.this,DrawerActivity.class);
 
             startActivity(intent);
             finish();

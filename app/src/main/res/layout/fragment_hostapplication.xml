@@ -1,0 +1,72 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/application_big"
+        />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:text="Contribute to the community, Sign up as ParkPal Host"
+        />
+
+    <TextView
+        android:paddingTop="50dp"
+        android:id="@+id/accepted"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:text="You are currently a ParkPal Host!"
+        />
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/textLayout"
+        android:orientation="vertical"
+        android:paddingBottom="10dp"
+        android:paddingTop="10dp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent">
+
+        <ScrollView
+            android:id="@+id/ScrollView01"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_height="350px"
+            android:layout_width="fill_parent">
+
+            <TextView
+                android:id="@+id/TEXT"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/tor"/>
+
+        </ScrollView>
+    </RelativeLayout>
+    <CheckBox
+        android:id="@+id/torcheck"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:text="I accept the Terms and Conditions"
+        />
+    <Button
+        android:id="@+id/accpTor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="7dp"
+        android:background="@drawable/rounded_button_transparent"
+        android:text="Sign me up!"
+        android:textAllCaps="false"
+        android:textColor="@color/colorAccent" />
+
+</LinearLayout>

@@ -269,7 +269,6 @@ public class PhoneAuthActivity extends AppCompatActivity implements
 
 
                             userID = user.getUid();
-
                             myRef.child("users").child(userID).addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot snapshot) {
@@ -282,7 +281,7 @@ public class PhoneAuthActivity extends AppCompatActivity implements
 //                                        editor.commit();
                                         Intent y;
 //                                        if(snapshot.child("role").getValue(String.class) == String.valueOf("User")){
-                                            y = new Intent(PhoneAuthActivity.this, DrawerActivity.class);
+                                        y = new Intent(PhoneAuthActivity.this, DrawerActivity.class);
 //                                        }
 
 
@@ -292,22 +291,6 @@ public class PhoneAuthActivity extends AppCompatActivity implements
                                         startActivity(y);
                                         finish();
                                     } else {
-
-                                        /*SharedPreferences mPreferences;
-
-                                        mPreferences = getSharedPreferences("User", MODE_PRIVATE);
-                                        SharedPreferences.Editor editor = mPreferences.edit();
-                                        editor.putString("saveuserid", userID);
-                                        editor.commit();*/
-
-                                        contactno = mPhoneNumberField.getText().toString();
-/*
-                                        //user does not exist, do something else
-                                        myRef.child("users").child(userID).setValue("true");
-                                        //    myRef.child("users").child(userID).child("Name").setValue("true");
-                                        myRef.child("users").child(userID).child("contact").setValue(contactno);
-                                        myRef.child("users").child(userID).child("name").setValue("-");
-*/
 
                                         Intent y = new Intent(PhoneAuthActivity.this, GetNameActivity.class);
                                         y.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

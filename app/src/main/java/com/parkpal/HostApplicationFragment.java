@@ -36,7 +36,6 @@ public class HostApplicationFragment extends Fragment {
 
         return inflater.inflate(R.layout.fragment_hostapplication, null);
 
-
     }
 
     @Override

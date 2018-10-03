@@ -129,6 +129,7 @@ public class DrawerActivity extends AppCompatActivity
         }else if (id == R.id.myReservations) {
 
         } else if (id == R.id.manageParking) {
+            fragment = new ManageFragment();
 
         } else if (id == R.id.hostReservations) {
 

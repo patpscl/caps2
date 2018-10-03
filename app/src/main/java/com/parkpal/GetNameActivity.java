@@ -79,7 +79,7 @@ public class GetNameActivity extends AppCompatActivity {
             databaseUser.child(uid).setValue("true");
             databaseUser.child(uid).child("contact").setValue(contact);
             databaseUser.child(uid).child("name").setValue(tempName);
-
+            databaseUser.child(uid).child("isHost").setValue(false);
             intent = new Intent(GetNameActivity.this,DrawerActivity.class);
 
             startActivity(intent);

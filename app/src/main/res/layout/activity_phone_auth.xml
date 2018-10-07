@@ -75,8 +75,7 @@ tools:context="com.parkpal.PhoneAuthActivity">
             android:paddingBottom="15dp"
             android:hint="9XX XXX XXXX"
             android:maxLength="10"
-            android:textColor="@color/colorAccent"
-            android:textColorHint="@color/colorAccent" />
+            android:textColor="@color/colorAccent"/>
 
         <EditText
             android:id="@+id/field_verification_code"
@@ -86,7 +85,6 @@ tools:context="com.parkpal.PhoneAuthActivity">
             android:hint="Enter verification code"
             android:textAlignment="center"
             android:maxLength="6"
-            android:textColorHint="@color/colorAccent"
             android:textColor="@color/colorAccent"
             android:visibility="gone"
             android:inputType="number"
@@ -94,17 +92,22 @@ tools:context="com.parkpal.PhoneAuthActivity">
             />
 
         <Button
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginLeft="40dp"
             android:id="@+id/button_start_verification"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_margin="7dp"
             android:background="@drawable/rounded_button_transparent"
             android:text="Continue"
             android:textAllCaps="false"
             android:textColor="@color/colorAccent" />
 
         <Button
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginLeft="40dp"
             android:id="@+id/button_verify_phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -116,7 +119,8 @@ tools:context="com.parkpal.PhoneAuthActivity">
 
         <Button
             android:id="@+id/button_resend"
-            android:layout_marginTop="20dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginLeft="40dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_button_transparent"

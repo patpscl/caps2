@@ -184,14 +184,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                             tEnd = System.currentTimeMillis();
                             tDelta = tEnd - tStart;
                             elapsedSeconds = tDelta / 1000.0;
-                            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("parkingLocations");
-                            ref.addValueEventListener(new ValueEventListener() {
+
+                            parkingRef.addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                     for (DataSnapshot dsp : dataSnapshot.getChildren()) {
                                         if (String.valueOf(dsp.child("parkingID").getValue(String.class)).equals(currentParkID)) {
-                                            DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("parkingLocations").child(dsp.getKey()).child("density");
-                                            ref1.child(currentFirebaseUser.getUid()).setValue(elapsedSeconds);
+                                            dsp.child("density").child(currentFirebaseUser.getUid()).child("ctime").getRef().setValue(elapsedSeconds);
                                         }
                                     }
                                 }
@@ -206,6 +205,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         tStart = 0;
                         tDelta = 0;
                         elapsedSeconds = 0;
+
                     }
                 }
                 previousTypeCounter = 0;
@@ -420,9 +420,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                                     return true;
                                 }
                             });
-
-                            //mMap.moveCamera(CameraUpdateFactory.newLatLng(Parking));
-                            //mMap.animateCamera( CameraUpdateFactory.zoomTo( 20.0f ) );
 
                             GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(Parking.latitude, Parking.longitude), 0.05f);
                             geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {

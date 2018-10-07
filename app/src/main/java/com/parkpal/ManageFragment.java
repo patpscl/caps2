@@ -3,6 +3,7 @@ package com.parkpal;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,7 +30,7 @@ public class ManageFragment extends Fragment {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference myRef;
     private ListView list;
-    private Button addBtn;
+    private FloatingActionButton addBtn;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -48,12 +50,15 @@ public class ManageFragment extends Fragment {
         List<String> parkingList = new ArrayList<>();
         list = (ListView) myView.findViewById(R.id.parkingList);
 
-        addBtn = (Button) myView.findViewById(R.id.btn);
+        addBtn = (FloatingActionButton) myView.findViewById(R.id.btn);
         addBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                //open to another view or fragment
+                AddParkingFragment nextFrag= new AddParkingFragment();
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.mainContent, nextFrag,"findThisFragment").addToBackStack(null)
+                        .commit();
             }
         });
 
@@ -63,11 +68,16 @@ public class ManageFragment extends Fragment {
                 list.setAdapter(null);
                 for(DataSnapshot snap:dataSnapshot.getChildren()){
                     parkingList.add(snap.child("address").getValue(String.class));
+                    Toast.makeText(getActivity(), snap.child("address").getValue(String.class), Toast.LENGTH_SHORT);
+                }
+                if(!parkingList.isEmpty()){
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>
+                            (getActivity(), android.R.layout.simple_list_item_1, parkingList);
+
+                    list.setAdapter(adapter);
 
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>
-                        (getActivity(), android.R.layout.simple_list_item_1, parkingList);
-                list.setAdapter(adapter);
+
             }
 
             @Override
